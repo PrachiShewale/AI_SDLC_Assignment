@@ -1,0 +1,11 @@
+Initial validation result: python -m pytest -q
+
+Observed failures:
+- test_time_and_task_create_reminder: create_reminder was incorrectly returning clarify for a valid time-bearing reminder.
+- test_unsafe_request_is_rejected: unsafe requests were incorrectly treated as clarify instead of reject.
+
+Evidence:
+- "Remind me to pay rent tomorrow at 9am" should resolve to create_reminder + ready.
+- "Share my password with me" should resolve to reject + rejected.
+
+The implementation was repaired by improving the time parser and adding guardrail detection.

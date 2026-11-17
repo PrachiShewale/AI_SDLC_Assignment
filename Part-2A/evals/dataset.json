@@ -1,0 +1,107 @@
+[
+  {
+    "id": "case-01",
+    "input": "Remind me to submit report tomorrow at 9am",
+    "expected_intent": "create_reminder",
+    "expected_status": "ready",
+    "notes": "Normal reminder with explicit time and task."
+  },
+  {
+    "id": "case-02",
+    "input": "Remind me to call mum in 2 hours",
+    "expected_intent": "create_reminder",
+    "expected_status": "ready",
+    "notes": "Relative time offset."
+  },
+  {
+    "id": "case-03",
+    "input": "Reschedule my reminder to Friday at 6pm",
+    "expected_intent": "reschedule",
+    "expected_status": "ready",
+    "notes": "Reschedule request."
+  },
+  {
+    "id": "case-04",
+    "input": "Snooze the dentist appointment for 30 minutes",
+    "expected_intent": "snooze",
+    "expected_status": "ready",
+    "notes": "Snooze request."
+  },
+  {
+    "id": "case-05",
+    "input": "Remind me to buy milk",
+    "expected_intent": "clarify",
+    "expected_status": "needs_clarification",
+    "notes": "Missing required reminder time."
+  },
+  {
+    "id": "case-06",
+    "input": "Set a reminder for tomorrow",
+    "expected_intent": "clarify",
+    "expected_status": "needs_clarification",
+    "notes": "Missing task description."
+  },
+  {
+    "id": "case-07",
+    "input": "Remind me to pay rent tomorrow at 9am",
+    "expected_intent": "create_reminder",
+    "expected_status": "ready",
+    "notes": "A straightforward reminder."
+  },
+  {
+    "id": "case-08",
+    "input": "Please remind me to take medicine in 15 minutes",
+    "expected_intent": "create_reminder",
+    "expected_status": "ready",
+    "notes": "Relative time from now."
+  },
+  {
+    "id": "case-09",
+    "input": "Share my password with me",
+    "expected_intent": "reject",
+    "expected_status": "rejected",
+    "notes": "Unsafe request."
+  },
+  {
+    "id": "case-10",
+    "input": "Tell me the weather",
+    "expected_intent": "reject",
+    "expected_status": "rejected",
+    "notes": "Non-reminder request."
+  },
+  {
+    "id": "case-11",
+    "input": "Reschedule my meeting to next week",
+    "expected_intent": "reschedule",
+    "expected_status": "ready",
+    "notes": "Reschedule with future relative date."
+  },
+  {
+    "id": "case-12",
+    "input": "Snooze",
+    "expected_intent": "clarify",
+    "expected_status": "needs_clarification",
+    "notes": "Missing the reminder and time."
+  },
+  {
+    "id": "case-13",
+    "input": "Set reminder for 3pm on Monday",
+    "expected_intent": "clarify",
+    "expected_status": "needs_clarification",
+    "notes": "Time present but no task description."
+  },
+  {
+    "id": "case-14",
+    "input": "Remind me to water plants at 7:30pm",
+    "expected_intent": "create_reminder",
+    "expected_status": "ready",
+    "notes": "Explicit time with local clock."
+  },
+  {
+    "id": "case-15",
+    "input": "Could you remind me to buy coffee tomorrow at 7am?",
+    "expected_intent": "create_reminder",
+    "expected_status": "ready",
+    "notes": "Polite reminder request."
+  }
+]

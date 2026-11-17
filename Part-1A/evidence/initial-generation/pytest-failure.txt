@@ -1,0 +1,14 @@
+Initial harness run: python -m pytest -q
+
+Result:
+2 failed, 2 passed in 0.47s
+
+Failure 1:
+- test_create_and_list_tasks: expected priority-descending order but the implementation sorted ascending.
+
+Failure 2:
+- test_invalid_inputs_are_rejected: update_task raised KeyError for a missing task instead of a ValueError.
+
+Failure evidence supplied back to the coding agent:
+- list_tasks must sort by priority descending, not ascending.
+- update_task must translate missing-task lookups into a validated ValueError.

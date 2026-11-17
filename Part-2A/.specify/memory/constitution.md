@@ -1,50 +1,34 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Reminder Agent Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Specification-First Evaluation
+Every AI feature must define a measurable JSON contract, behavioural invariants, and pass threshold before implementation. If requirements are ambiguous, the specification must be corrected before coding continues.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Stable Output Contract
+The agent must always return a machine-readable JSON object with a fixed schema, supported intents, and a deterministic `safe` flag even when the textual wording varies.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Validation Before Acceptance
+Every generated response is evaluated through schema validation, invariant checks, and semantic quality checks. An output is accepted only after the threshold is satisfied.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Safety and Guardrails
+Requests that are unsafe, outside the reminder scope, or missing required information must be rejected or clarified rather than guessed.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Evidence-Driven Repair
+If the harness fails, the failure evidence must be recorded and supplied back to the implementation before re-running the same guardrails.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Additional Constraints
+- Supported intents are limited to `create_reminder`, `reschedule`, `snooze`, `clarify`, and `reject`.
+- All valid reminders must include an ISO 8601 timestamp with timezone information.
+- Clarification is required when mandatory task details or times are missing.
+- The aggregate evaluation threshold is 0.8, calculated as passed cases divided by total cases.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
-
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+## Development Workflow
+- The accepted specification drives implementation and dataset design.
+- All evaluation results are reviewed by a human before the final ACCEPT/REJECT decision.
+- Any legitimate requirement change must be reflected in the specification and the evaluation dataset.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+This constitution governs the reminder-agent project. All changes must remain traceable to the approved specification and evaluation harness.
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
-
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-11-17 | **Last Amended**: 2026-11-17

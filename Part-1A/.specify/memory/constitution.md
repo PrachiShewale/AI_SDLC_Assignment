@@ -1,43 +1,32 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Smart Todo CLI Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Specification-first implementation
+Every feature must have measurable acceptance criteria before implementation. When an ambiguity is found, the relevant specification artifact should be updated before coding continues.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Deterministic tooling and CLI contract
+The application must expose stable CLI behavior and store state in JSON. Outputs must be predictable across runs when given the same inputs.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Test-first validation
+Tests are required before acceptance. They must exercise both valid flows and invalid inputs, and they must fail before implementation repairs are applied.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Security and quality gates
+All implementations must pass syntax checking, a static security pass, and deterministic tests before a human accepts the result.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Observable evidence
+All failures, repairs, and validations must be captured in project evidence so that the specification-to-implementation path remains traceable.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Additional Constraints
+- Task titles are mandatory and non-empty.
+- Supported statuses are limited to `todo`, `in_progress`, and `done`.
+- Supported priorities are limited to `1`, `2`, and `3`.
+- Tag normalization is lowercase and de-duplicated in the stored representation.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
-
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
+## Development Workflow
+- Changes must follow the approved specification and task breakdown.
+- Any failing harness result must be recorded and fed back into implementation repairs.
+- Final acceptance is a human decision after automated gates pass.
 <!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
 
 ## Governance
