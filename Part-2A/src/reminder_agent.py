@@ -18,7 +18,11 @@ def generate_reminder_output(user_text: str) -> dict[str, Any]:
     system_prompt = PROMPT_PATH.read_text(encoding="utf-8")
     current_time = datetime.now(timezone.utc).isoformat(timespec="seconds")
     request = json.dumps(
-        {"current_time_utc": current_time, "user_request": user_text},
+        {
+            "current_time_utc": current_time,
+            "user_request": user_text,
+            "output_format": "JSON object",
+        },
         ensure_ascii=False,
     )
     return complete_json(system_prompt, request)

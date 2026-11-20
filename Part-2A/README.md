@@ -4,23 +4,15 @@ This project calls a language model to interpret reminder requests. The evaluati
 
 ## Configure a model
 
-The app uses the OpenAI Responses API. Set the endpoint, model name, and API token as environment variables. The API token is read from `REMINDER_API_KEY`; do not commit it or paste it into source files.
+The app uses the OpenAI Responses API. For a simple local setup, edit the ignored `Part-2A/.env` file and enter:
 
-In the VS Code PowerShell terminal, enter the token without echoing it and set the endpoint/model values:
-
-```powershell
-$secure = Read-Host "OpenAI API key" -AsSecureString
-$ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
-try {
-    $env:REMINDER_API_KEY = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
-} finally {
-    [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)
-}
-$env:REMINDER_API_URL = "https://api.openai.com/v1/responses"
-$env:REMINDER_MODEL = "gpt-6-luna"
+```dotenv
+REMINDER_API_KEY=
+REMINDER_API_URL=https://api.openai.com/v1/responses
+REMINDER_MODEL=gpt-6-luna
 ```
 
-The client sends a JSON-mode request with `store: false` to the configured Responses API URL using bearer-token authentication.
+Paste the actual secret after `REMINDER_API_KEY=` with no quotes or extra spaces. The app loads these settings from `.env`; `.gitignore` excludes the file, so never force-add it to Git or share its contents. The client sends a JSON-mode request with `store: false` using bearer-token authentication.
 
 ## Run tests and evaluation
 

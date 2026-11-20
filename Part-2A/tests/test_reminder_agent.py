@@ -30,6 +30,7 @@ def test_agent_passes_request_and_reference_time_to_model():
     request = json.loads(user_prompt)
     assert request["user_request"] == "Remind me to buy milk"
     assert request["current_time_utc"].endswith("+00:00")
+    assert request["output_format"] == "JSON object"
 
 
 def test_non_string_request_is_rejected_before_model_call():
