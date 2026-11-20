@@ -1,8 +1,9 @@
 # Task Breakdown
 
-1. Define the reminder JSON contract and required agent intents.
-2. Implement the reminder generator and parser.
-3. Build the evaluation dataset with normal and edge cases.
-4. Add schema, property, and semantic validation checks.
-5. Run the harness, record evidence, and repair failing cases.
-6. Final human review and acceptance decision.
+- [x] Define the output contract, behavioral rules, safety boundaries, and evaluation threshold in `spec.md`.
+- [x] Implement the configurable model API client and prompt with explicit service errors.
+- [x] Create a requirement-traceable evaluation dataset with at least 15 diverse cases.
+- [x] Add schema, property, and source-grounded quality evaluators.
+- [x] Add mocked API and evaluator tests that do not require credentials or network access.
+- [ ] Run the live evaluation with an authorized model token and review the generated results.
+- [ ] Review the final results and record the student's human ACCEPT/REJECT decision.

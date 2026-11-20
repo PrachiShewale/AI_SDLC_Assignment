@@ -5,6 +5,8 @@ import pytest
 
 from src.todo_app import TaskStore
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
 
 @pytest.fixture
 def store(tmp_path):
@@ -56,6 +58,7 @@ def test_cli_round_trip(tmp_path):
         capture_output=True,
         text=True,
         check=True,
+        cwd=PROJECT_ROOT,
     )
     payload = json.loads(result.stdout)
     assert payload["title"] == "Review PR"
@@ -67,6 +70,7 @@ def test_cli_round_trip(tmp_path):
         capture_output=True,
         text=True,
         check=True,
+        cwd=PROJECT_ROOT,
     )
     tasks = json.loads(list_result.stdout)
     assert tasks[0]["title"] == "Review PR"

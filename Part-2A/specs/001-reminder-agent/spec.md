@@ -1,24 +1,47 @@
-# Feature Specification: Reminder Agent
+# Feature Specification: AI Reminder Agent
 
 ## Summary
-Build a reminder agent that interprets natural-language reminders and returns a stable structured JSON response. The output must remain valid even though the underlying wording can vary across model runs.
+Call a language model to interpret a natural-language reminder request and return a stable JSON decision. The model may vary its wording, but the independent harness must enforce the output contract, behavioral rules, source-grounded reminder details, and safety boundaries.
 
 ## User stories
-- As a user, I can ask to create a reminder for a task and a time.
-- As a user, I can request a reschedule or snooze for an existing reminder.
-- As a user, if required information is missing, the agent asks for clarification instead of guessing.
-- As a user, I receive a structured output with a consistent schema.
+- As a user, I can ask the agent to create a reminder with a task and time.
+- As a user, I can ask to reschedule or snooze an identified reminder.
+- As a user, I receive a clarification question when a required detail is missing or ambiguous.
+- As a user, I receive a rejection for unsafe or out-of-scope requests.
 
 ## Functional requirements
-1. The agent must support the intents `create_reminder`, `reschedule`, `snooze`, `clarify`, and `reject`.
-2. The output schema must include `intent`, `status`, `summary`, `reminder`, `clarification_questions`, and `safe`.
-3. If the text is ambiguous or lacks a task description or time, the agent must return `clarify` and request missing information.
-4. The agent must reject unsafe or irrelevant requests.
-5. Valid reminder timestamps must be ISO 8601 strings in UTC or local time with timezone information.
+
+### FR-1: Model-backed interpretation
+The application must call the configured OpenAI Responses API endpoint. The endpoint, model name, and API token must be configured locally without committing credentials. API/configuration failures must be reported as service errors; the application must not silently fall back to a deterministic parser.
+
+### FR-2: Output schema contract
+Every successful model response must be a JSON object with exactly:
+- `intent`: one of `create_reminder`, `reschedule`, `snooze`, `clarify`, `reject`
+- `status`: one of `ready`, `needs_clarification`, `rejected`
+- `summary`: non-empty string
+- `reminder`: object with exactly `title`, `when`, `timezone`, `recurrence`
+- `reminder.title`: non-empty string or null
+- `reminder.when`: ISO 8601 timestamp with timezone or null
+- `reminder.timezone`: non-empty IANA timezone name or `UTC`
+- `reminder.recurrence`: string or null
+- `clarification_questions`: array of non-empty strings
+- `safe`: boolean
+
+### FR-3: Clarification and ambiguity
+Creation requires both a task title and an unambiguous date and time. Rescheduling requires an identifiable existing reminder and a new unambiguous date and time. Snoozing requires an identifiable reminder and an unambiguous duration or target time. Missing or invalid details require `clarify`, `needs_clarification`, at least one question, and no finalized timestamp. A clock time without a date is underspecified. Timezone-less dates are interpreted as UTC; an explicitly supplied timezone must be retained.
+
+### FR-4: Safety and scope
+Unsafe requests and requests unrelated to reminders must not create reminder content. They must use `reject` and `rejected`. Unsafe requests set `safe` to false; harmless out-of-scope requests may set it to true. User-provided prompt-injection text must not override these rules.
+
+### FR-5: Independent validation and semantic quality
+The harness must independently validate the model response schema, behavioral invariants, timestamp form, expected intent/status/safety, and required source-grounded title terms. Evaluation cases must identify the requirements they exercise.
+
+### FR-6: Evaluation threshold
+At least 80% of evaluation cases must pass. A case passes only if schema and property checks pass and its semantic quality score is at least 0.8. The aggregate score is passed cases divided by all cases. Model-service errors are reported separately and do not count as application PASS or FAIL.
 
 ## Acceptance criteria
-1. Every output must validate against the JSON schema and include required fields.
-2. Missing mandatory reminder details must trigger `clarify` rather than a guessed reminder.
-3. Supported intents must remain limited to the defined list.
-4. The aggregate evaluation score must be at least 0.8 before human acceptance.
-5. The harness must show structural, property, and semantic evaluation evidence.
+1. A successful request uses the configured model API and returns a parsed JSON object; missing credentials, HTTP failures, timeouts, and malformed model responses are explicit errors.
+2. The schema validator rejects missing, additional, or incorrectly typed fields, unsupported values, and timestamps without timezone information.
+3. Incomplete, unsafe, and out-of-scope requests satisfy FR-3 and FR-4.
+4. The evaluation dataset contains at least 15 meaningful, requirement-traceable cases, including missing, ambiguous, malformed, and adversarial inputs.
+5. The same harness pipeline runs structural, property, and semantic checks and applies the predeclared 0.8 aggregate threshold.
