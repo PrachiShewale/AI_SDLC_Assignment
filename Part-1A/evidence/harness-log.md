@@ -46,7 +46,7 @@ All harness gates passed.
 Decision: ACCEPT
 
 
-Justification
+# Justification
 
 I reviewed the Smart Todo CLI against the acceptance criteria in the specification, and every criterion I checked was satisfied. Specifically, I was able to:
 
@@ -58,10 +58,11 @@ delete a record
 
 The behaviour was predictable and repeatable: the same input gave the same output each time, which is what the deterministic design and the specification-derived tests are meant to guarantee.
 
+# Decision
 Decision: ACCEPT
 
 
-Limitations
+# Limitations
 
 Rigid, exact-match behaviour. Because the app is deterministic, it only handles the inputs and transitions defined in the specification. Anything outside those definitions is rejected rather than interpreted, so it can’t adapt to loosely phrased or unexpected input the way an AI-based app could.
 
