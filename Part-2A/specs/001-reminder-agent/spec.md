@@ -8,11 +8,12 @@ Call a language model to interpret a natural-language reminder request and retur
 - As a user, I can ask to reschedule or snooze an identified reminder.
 - As a user, I receive a clarification question when a required detail is missing or ambiguous.
 - As a user, I receive a rejection for unsafe or out-of-scope requests.
+- As a local demo user, I can submit a reminder request over HTTP and receive the agent's JSON result.
 
 ## Functional requirements
 
 ### FR-1: Model-backed interpretation
-The application must call the configured OpenAI Responses API endpoint. The endpoint, model name, and API token must be configured locally without committing credentials. API/configuration failures must be reported as service errors; the application must not silently fall back to a deterministic parser.
+The application must call the configured Google Gemini `generateContent` API endpoint. The endpoint, model name, and API token must be configured locally without committing credentials. API/configuration failures must be reported as service errors; the application must not silently fall back to a deterministic parser.
 
 ### FR-2: Output schema contract
 Every successful model response must be a JSON object with exactly:
@@ -39,9 +40,13 @@ The harness must independently validate the model response schema, behavioral in
 ### FR-6: Evaluation threshold
 At least 80% of evaluation cases must pass. A case passes only if schema and property checks pass and its semantic quality score is at least 0.8. The aggregate score is passed cases divided by all cases. Model-service errors are reported separately and do not count as application PASS or FAIL.
 
+### FR-7: Local demo API
+The application must expose `GET /health` and `POST /api/reminders` on loopback address `127.0.0.1:8000`. The POST endpoint accepts a JSON object with a non-empty string `text` field and returns the reminder agent's JSON result. Invalid requests receive a 4xx JSON error; Gemini service failures receive a 502 JSON error. The API key remains local and is never accepted from the request body.
+
 ## Acceptance criteria
 1. A successful request uses the configured model API and returns a parsed JSON object; missing credentials, HTTP failures, timeouts, and malformed model responses are explicit errors.
 2. The schema validator rejects missing, additional, or incorrectly typed fields, unsupported values, and timestamps without timezone information.
 3. Incomplete, unsafe, and out-of-scope requests satisfy FR-3 and FR-4.
 4. The evaluation dataset contains at least 15 meaningful, requirement-traceable cases, including missing, ambiguous, malformed, and adversarial inputs.
 5. The same harness pipeline runs structural, property, and semantic checks and applies the predeclared 0.8 aggregate threshold.
+6. The local API health endpoint works without a model call, and a valid POST request forwards text to the agent without exposing credentials.

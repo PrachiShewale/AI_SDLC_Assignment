@@ -23,7 +23,7 @@ RESULTS_PATH = ROOT / "evidence" / "final-generation" / "eval-results.json"
 
 def _model_configuration() -> dict[str, str]:
     return {
-        "provider": "OpenAI Responses API",
+        "provider": "Google Gemini generateContent API",
         "model": os.environ.get("REMINDER_MODEL", "<not configured>"),
         "api_url": os.environ.get("REMINDER_API_URL", "<not configured>"),
     }

@@ -11,7 +11,7 @@ from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parent.parent
 ENVIRONMENT_KEYS = {"REMINDER_API_KEY", "REMINDER_API_URL", "REMINDER_MODEL"}
-MAX_RATE_LIMIT_RETRIES = 3
+MAX_TRANSIENT_RETRIES = 3
 
 
 class ModelClientError(RuntimeError):
@@ -39,7 +39,7 @@ def load_local_environment(env_path: Path | None = None) -> None:
             os.environ[name] = value
 
 
-def _rate_limit_delay(exc: HTTPError, response_body: bytes, retry_number: int) -> float:
+def _retry_delay(exc: HTTPError, response_body: bytes, retry_number: int) -> float:
     retry_after = exc.headers.get("Retry-After") if exc.headers else None
     if retry_after:
         try:
@@ -62,7 +62,7 @@ def _rate_limit_delay(exc: HTTPError, response_body: bytes, retry_number: int) -
             return delay * 60
         return delay
 
-    return min(2**retry_number, 30)
+    return min(2 ** (retry_number + 1), 30)
 
 
 def _raise_http_error(exc: HTTPError, response_body: bytes, api_key: str | None) -> None:
@@ -150,17 +150,15 @@ def complete_json(system_prompt: str, user_prompt: str) -> dict[str, Any]:
         raise ModelClientError("REMINDER_API_URL must use HTTPS.")
 
     payload = {
-        "model": model,
-        "instructions": system_prompt,
-        "input": user_prompt,
-        "store": False,
-        "text": {"format": {"type": "json_object"}},
+        "systemInstruction": {"parts": [{"text": system_prompt}]},
+        "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],
+        "generationConfig": {"responseMimeType": "application/json"},
     }
     request = Request(
         api_url,
         data=json.dumps(payload).encode("utf-8"),
         headers={
-            "Authorization": f"Bearer {api_key}",
+            "x-goog-api-key": api_key,
             "Content-Type": "application/json",
             "Accept": "application/json",
         },
@@ -176,8 +174,8 @@ def complete_json(system_prompt: str, user_prompt: str) -> dict[str, Any]:
                 break
             except HTTPError as exc:
                 response_body = exc.read()
-                if exc.code == 429 and retry_number < MAX_RATE_LIMIT_RETRIES:
-                    time.sleep(_rate_limit_delay(exc, response_body, retry_number))
+                if exc.code in {408, 429, 500, 502, 503, 504} and retry_number < MAX_TRANSIENT_RETRIES:
+                    time.sleep(_retry_delay(exc, response_body, retry_number))
                     retry_number += 1
                     continue
                 _raise_http_error(exc, response_body, api_key)
@@ -188,18 +186,20 @@ def complete_json(system_prompt: str, user_prompt: str) -> dict[str, Any]:
 
     try:
         completion = json.loads(response_body)
+        candidates = completion["candidates"]
+        if not candidates:
+            raise KeyError("candidates")
+        parts = candidates[0]["content"]["parts"]
         content = [
-            item["text"]
-            for output_item in completion["output"]
-            if output_item.get("type") == "message"
-            for item in output_item.get("content", [])
-            if item.get("type") == "output_text"
+            part["text"]
+            for part in parts
+            if isinstance(part, dict) and isinstance(part.get("text"), str)
         ]
         if not content:
-            raise KeyError("output_text")
+            raise KeyError("candidate.content.parts.text")
         result = json.loads("".join(content))
     except (json.JSONDecodeError, KeyError, IndexError, TypeError) as exc:
-        raise ModelClientError("Model service returned an invalid Responses API JSON response.") from exc
+        raise ModelClientError("Gemini returned an invalid generateContent JSON response.") from exc
 
     if not isinstance(result, dict):
         raise ModelClientError("Model response must be a JSON object.")

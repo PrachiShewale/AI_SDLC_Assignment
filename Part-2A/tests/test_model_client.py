@@ -27,7 +27,13 @@ class FakeResponse:
         return json.dumps(self.body).encode("utf-8")
 
 
-def test_model_client_sends_configured_responses_api_request():
+@pytest.fixture(autouse=True)
+def isolate_local_environment():
+    with patch("part_2a_src.model_client.load_local_environment"):
+        yield
+
+
+def test_model_client_sends_configured_gemini_generate_content_request():
     model_reply = {
         "intent": "reject",
         "status": "rejected",
@@ -43,12 +49,9 @@ def test_model_client_sends_configured_responses_api_request():
     }
     response = FakeResponse(
         {
-            "output": [
+            "candidates": [
                 {
-                    "type": "message",
-                    "content": [
-                        {"type": "output_text", "text": json.dumps(model_reply)}
-                    ],
+                    "content": {"parts": [{"text": json.dumps(model_reply)}]},
                 }
             ]
         }
@@ -58,8 +61,8 @@ def test_model_client_sends_configured_responses_api_request():
         "os.environ",
         {
             "REMINDER_API_KEY": "test-token",
-            "REMINDER_API_URL": "https://api.example.test/v1/responses",
-            "REMINDER_MODEL": "gpt-6-luna",
+            "REMINDER_API_URL": "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent",
+            "REMINDER_MODEL": "gemini-flash-latest",
         },
         clear=True,
     ), patch("part_2a_src.model_client.urlopen", return_value=response) as urlopen:
@@ -68,19 +71,25 @@ def test_model_client_sends_configured_responses_api_request():
     assert result == model_reply
     request = urlopen.call_args.args[0]
     request_body = json.loads(request.data)
-    assert request.full_url == "https://api.example.test/v1/responses"
-    assert request.get_header("Authorization") == "Bearer test-token"
-    assert request_body["model"] == "gpt-6-luna"
-    assert request_body["store"] is False
-    assert request_body["text"]["format"] == {"type": "json_object"}
+    assert request.full_url == "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent"
+    assert request.get_header("X-goog-api-key") == "test-token"
+    assert request_body["systemInstruction"] == {
+        "parts": [{"text": "system prompt"}]
+    }
+    assert request_body["contents"] == [
+        {"role": "user", "parts": [{"text": "user request"}]}
+    ]
+    assert request_body["generationConfig"] == {
+        "responseMimeType": "application/json"
+    }
 
 
 def test_model_client_requires_credentials():
     with patch.dict(
         "os.environ",
         {
-            "REMINDER_API_URL": "https://api.example.test/v1/responses",
-            "REMINDER_MODEL": "gpt-6-luna",
+            "REMINDER_API_URL": "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent",
+            "REMINDER_MODEL": "gemini-flash-latest",
         },
         clear=True,
     ), patch("part_2a_src.model_client.load_local_environment"), patch(
@@ -97,8 +106,8 @@ def test_model_client_rejects_non_https_endpoint():
         "os.environ",
         {
             "REMINDER_API_KEY": "test-token",
-            "REMINDER_API_URL": "http://example.test/v1/responses",
-            "REMINDER_MODEL": "gpt-6-luna",
+            "REMINDER_API_URL": "http://example.test/v1beta/models/gemini-flash-latest:generateContent",
+            "REMINDER_MODEL": "gemini-flash-latest",
         },
         clear=True,
     ), patch("part_2a_src.model_client.urlopen") as urlopen:
@@ -111,10 +120,9 @@ def test_model_client_rejects_non_https_endpoint():
 def test_model_client_rejects_non_json_model_content():
     response = FakeResponse(
         {
-            "output": [
+            "candidates": [
                 {
-                    "type": "message",
-                    "content": [{"type": "output_text", "text": "not json"}],
+                    "content": {"parts": [{"text": "not json"}]},
                 }
             ]
         }
@@ -124,12 +132,12 @@ def test_model_client_rejects_non_json_model_content():
         "os.environ",
         {
             "REMINDER_API_KEY": "test-token",
-            "REMINDER_API_URL": "https://api.example.test/v1/responses",
-            "REMINDER_MODEL": "gpt-6-luna",
+            "REMINDER_API_URL": "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent",
+            "REMINDER_MODEL": "gemini-flash-latest",
         },
         clear=True,
     ), patch("part_2a_src.model_client.urlopen", return_value=response):
-        with pytest.raises(ModelClientError, match="invalid Responses API"):
+        with pytest.raises(ModelClientError, match="invalid generateContent"):
             complete_json("system", "user")
 
 
@@ -145,7 +153,7 @@ def test_http_error_reports_provider_message_without_leaking_key():
         }
     ).encode("utf-8")
     error = HTTPError(
-        "https://api.example.test/v1/responses",
+        "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent",
         400,
         "Bad Request",
         {},
@@ -156,8 +164,8 @@ def test_http_error_reports_provider_message_without_leaking_key():
         "os.environ",
         {
             "REMINDER_API_KEY": "test-token",
-            "REMINDER_API_URL": "https://api.example.test/v1/responses",
-            "REMINDER_MODEL": "gpt-6-luna",
+            "REMINDER_API_URL": "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent",
+            "REMINDER_MODEL": "gemini-flash-latest",
         },
         clear=True,
     ), patch("part_2a_src.model_client.urlopen", side_effect=error):
@@ -173,7 +181,7 @@ def test_http_error_reports_provider_message_without_leaking_key():
 def test_http_error_supports_string_error_bodies():
     response_body = json.dumps({"error": "Unsupported model identifier."}).encode("utf-8")
     error = HTTPError(
-        "https://api.example.test/v1/responses",
+        "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent",
         400,
         "Bad Request",
         {},
@@ -184,8 +192,8 @@ def test_http_error_supports_string_error_bodies():
         "os.environ",
         {
             "REMINDER_API_KEY": "test-token",
-            "REMINDER_API_URL": "https://api.example.test/v1/responses",
-            "REMINDER_MODEL": "gpt-6-luna",
+            "REMINDER_API_URL": "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent",
+            "REMINDER_MODEL": "gemini-flash-latest",
         },
         clear=True,
     ), patch("part_2a_src.model_client.urlopen", side_effect=error):
@@ -195,7 +203,7 @@ def test_http_error_supports_string_error_bodies():
 
 def test_http_429_retries_after_provider_delay():
     rate_limit_error = HTTPError(
-        "https://api.example.test/v1/responses",
+        "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent",
         429,
         "Too Many Requests",
         {},
@@ -206,10 +214,9 @@ def test_http_429_retries_after_provider_delay():
         ),
     )
     model_reply = {
-        "output": [
+        "candidates": [
             {
-                "type": "message",
-                "content": [{"type": "output_text", "text": '{"ok": true}'}],
+                "content": {"parts": [{"text": '{"ok": true}'}]},
             }
         ]
     }
@@ -218,8 +225,8 @@ def test_http_429_retries_after_provider_delay():
         "os.environ",
         {
             "REMINDER_API_KEY": "test-token",
-            "REMINDER_API_URL": "https://api.example.test/v1/responses",
-            "REMINDER_MODEL": "gpt-6-luna",
+            "REMINDER_API_URL": "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent",
+            "REMINDER_MODEL": "gemini-flash-latest",
         },
         clear=True,
     ), patch(
@@ -232,9 +239,41 @@ def test_http_429_retries_after_provider_delay():
     sleep.assert_called_once_with(6.0)
 
 
+def test_http_503_retries_with_backoff():
+    service_error = HTTPError(
+        "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent",
+        503,
+        "Service Unavailable",
+        {},
+        BytesIO(json.dumps({"error": {"message": "Service is temporarily busy."}}).encode("utf-8")),
+    )
+    model_reply = {
+        "candidates": [
+            {"content": {"parts": [{"text": '{"ok": true}'}]}}
+        ]
+    }
+
+    with patch.dict(
+        "os.environ",
+        {
+            "REMINDER_API_KEY": "test-token",
+            "REMINDER_API_URL": "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent",
+            "REMINDER_MODEL": "gemini-flash-latest",
+        },
+        clear=True,
+    ), patch(
+        "part_2a_src.model_client.urlopen",
+        side_effect=[service_error, FakeResponse(model_reply)],
+    ) as urlopen, patch("part_2a_src.model_client.time.sleep") as sleep:
+        assert complete_json("system", "user") == {"ok": True}
+
+    assert urlopen.call_count == 2
+    sleep.assert_called_once_with(2)
+
+
 def test_http_error_reports_safe_metadata_when_body_is_empty():
     error = HTTPError(
-        "https://api.example.test/v1/responses",
+        "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent",
         400,
         "Bad Request",
         {"Content-Type": "application/json", "x-request-id": "request-123"},
@@ -245,8 +284,8 @@ def test_http_error_reports_safe_metadata_when_body_is_empty():
         "os.environ",
         {
             "REMINDER_API_KEY": "test-token",
-            "REMINDER_API_URL": "https://api.example.test/v1/responses",
-            "REMINDER_MODEL": "gpt-6-luna",
+            "REMINDER_API_URL": "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent",
+            "REMINDER_MODEL": "gemini-flash-latest",
         },
         clear=True,
     ), patch("part_2a_src.model_client.urlopen", side_effect=error):
@@ -262,7 +301,7 @@ def test_local_environment_loads_values_without_overriding_process_values(tmp_pa
     env_file = tmp_path / ".env"
     env_file.write_text(
         'REMINDER_API_KEY="test-token"\n'
-        "REMINDER_API_URL=https://api.example.test/v1/responses\n"
+        "REMINDER_API_URL=https://api.example.test/v1beta/models/gemini-flash-latest:generateContent\n"
         "REMINDER_MODEL=file-model\n",
         encoding="utf-8",
     )
@@ -275,7 +314,7 @@ def test_local_environment_loads_values_without_overriding_process_values(tmp_pa
         load_local_environment(env_file)
 
         assert os.environ["REMINDER_API_KEY"] == "test-token"
-        assert os.environ["REMINDER_API_URL"] == "https://api.example.test/v1/responses"
+        assert os.environ["REMINDER_API_URL"] == "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent"
         assert os.environ["REMINDER_MODEL"] == "process-model"
 
 
