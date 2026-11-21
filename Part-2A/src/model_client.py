@@ -12,6 +12,7 @@ from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parent.parent
 ENVIRONMENT_KEYS = {"REMINDER_API_KEY", "REMINDER_API_URL", "REMINDER_MODEL"}
 MAX_TRANSIENT_RETRIES = 3
+MODEL_REQUEST_TIMEOUT_SECONDS = 420
 
 
 class ModelClientError(RuntimeError):
@@ -39,7 +40,7 @@ def load_local_environment(env_path: Path | None = None) -> None:
             os.environ[name] = value
 
 
-def _retry_delay(exc: HTTPError, response_body: bytes, retry_number: int) -> float:
+def _retry_delay(exc: HTTPError, response_body: bytes, retry_number: int) -> float | None:
     retry_after = exc.headers.get("Retry-After") if exc.headers else None
     if retry_after:
         try:
@@ -62,6 +63,8 @@ def _retry_delay(exc: HTTPError, response_body: bytes, retry_number: int) -> flo
             return delay * 60
         return delay
 
+    if exc.code == 429:
+        return None
     return min(2 ** (retry_number + 1), 30)
 
 
@@ -169,15 +172,17 @@ def complete_json(system_prompt: str, user_prompt: str) -> dict[str, Any]:
         retry_number = 0
         while True:
             try:
-                with urlopen(request, timeout=60) as response:
+                with urlopen(request, timeout=MODEL_REQUEST_TIMEOUT_SECONDS) as response:
                     response_body = response.read()
                 break
             except HTTPError as exc:
                 response_body = exc.read()
                 if exc.code in {408, 429, 500, 502, 503, 504} and retry_number < MAX_TRANSIENT_RETRIES:
-                    time.sleep(_retry_delay(exc, response_body, retry_number))
-                    retry_number += 1
-                    continue
+                    retry_delay = _retry_delay(exc, response_body, retry_number)
+                    if retry_delay is not None:
+                        time.sleep(retry_delay)
+                        retry_number += 1
+                        continue
                 _raise_http_error(exc, response_body, api_key)
     except URLError as exc:
         raise ModelClientError(f"Could not reach model service: {exc.reason}.") from exc

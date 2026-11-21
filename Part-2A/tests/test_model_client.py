@@ -69,6 +69,7 @@ def test_model_client_sends_configured_gemini_generate_content_request():
         result = complete_json("system prompt", "user request")
 
     assert result == model_reply
+    assert urlopen.call_args.kwargs["timeout"] == 420
     request = urlopen.call_args.args[0]
     request_body = json.loads(request.data)
     assert request.full_url == "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent"
@@ -237,6 +238,43 @@ def test_http_429_retries_after_provider_delay():
 
     assert urlopen.call_count == 2
     sleep.assert_called_once_with(6.0)
+
+
+def test_http_429_quota_error_does_not_retry():
+    quota_error = HTTPError(
+        "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent",
+        429,
+        "Too Many Requests",
+        {},
+        BytesIO(
+            json.dumps(
+                {
+                    "error": {
+                        "message": "You exceeded your current quota.",
+                        "status": "RESOURCE_EXHAUSTED",
+                    }
+                }
+            ).encode("utf-8")
+        ),
+    )
+
+    with patch.dict(
+        "os.environ",
+        {
+            "REMINDER_API_KEY": "test-token",
+            "REMINDER_API_URL": "https://api.example.test/v1beta/models/gemini-flash-latest:generateContent",
+            "REMINDER_MODEL": "gemini-flash-latest",
+        },
+        clear=True,
+    ), patch(
+        "part_2a_src.model_client.urlopen",
+        side_effect=quota_error,
+    ) as urlopen, patch("part_2a_src.model_client.time.sleep") as sleep:
+        with pytest.raises(ModelClientError, match="HTTP 429.*exceeded your current quota"):
+            complete_json("system", "user")
+
+    urlopen.assert_called_once()
+    sleep.assert_not_called()
 
 
 def test_http_503_retries_with_backoff():
