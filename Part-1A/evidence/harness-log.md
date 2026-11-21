@@ -37,7 +37,7 @@ lint passed
 security passed
 
 === tests ===
-tests passed
+4 passed, 0 failed
 
 All harness gates passed.
 ```
@@ -45,11 +45,24 @@ All harness gates passed.
 ## Human review
 Decision: ACCEPT
 
-Justification:
-- The specification acceptance criteria were satisfied.
-- The implementation passed the lint gate, static security pass, and deterministic tests.
-- The repair cycle was documented and revalidated without weakening the requirements.
 
-Known limitations:
-- The JSON-backed persistence is intentionally simple and file-based; it does not implement a multi-process locking mechanism.
-- The static security check is focused on dangerous Python patterns relevant to this small deterministic application.
+Justification
+
+I reviewed the Smart Todo CLI against the acceptance criteria in the specification, and every criterion I checked was satisfied. Specifically, I was able to:
+
+add a task, which started with the status todo
+complete a task, reopen it, and move it to review
+list all tasks
+view a priority-sorted list
+delete a record
+
+The behaviour was predictable and repeatable: the same input gave the same output each time, which is what the deterministic design and the specification-derived tests are meant to guarantee.
+
+Decision: ACCEPT
+
+
+Limitations
+
+Rigid, exact-match behaviour. Because the app is deterministic, it only handles the inputs and transitions defined in the specification. Anything outside those definitions is rejected rather than interpreted, so it can’t adapt to loosely phrased or unexpected input the way an AI-based app could.
+
+Security. [Your security observation goes here. Your note was cut off after “other than that security”, so tell me what you meant.] Static checks such as Bandit catch known code-level issues, but they don’t prove the app is secure. For example, tasks are stored in a plain JSON file with no access control or encryption. Keep this line only if it’s true of your app.

@@ -20,7 +20,8 @@
 - Evidence file:
 
 ## Human review
-- Decision (ACCEPT or REJECT):
+- Decision: ACCEPT
+
 - Outputs reviewed:
 - Justification:
 
