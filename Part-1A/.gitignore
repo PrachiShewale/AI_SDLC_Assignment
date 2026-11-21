@@ -1,8 +1,6 @@
-type .gitignore
-git init
-git add .
-git status
-git commit -m "Initial commit: Spec Kit projects for Part 1A and Part 1B"
-git branch -M main
-git remote add origin https://github.com/PrachiShewale/AI_SDLC_Assignment.git
-git push -u origin main
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+tasks.json
