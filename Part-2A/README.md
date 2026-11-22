@@ -2,6 +2,7 @@
 
 This project calls a language model to interpret reminder requests. The evaluation harness independently checks the JSON contract, behavioral invariants, and source-grounded semantic criteria.
 
+
 ## Configure a model
 
 The app uses Google's Gemini `generateContent` API. Create a Gemini API key in [Google AI Studio](https://aistudio.google.com/apikey), then edit the ignored `Part-2A/.env` file:
