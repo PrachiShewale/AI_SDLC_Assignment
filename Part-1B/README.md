@@ -5,7 +5,7 @@ This project calls a language model to interpret reminder requests. The evaluati
 
 ## Configure a model
 
-The app uses Google's Gemini `generateContent` API. Create a Gemini API key in [Google AI Studio](https://aistudio.google.com/apikey), then edit the ignored `Part-2A/.env` file:
+The app uses Google's Gemini `generateContent` API. Create a Gemini API key in [Google AI Studio](https://aistudio.google.com/apikey), then edit the ignored `Part-1B/.env` file:
 
 ```dotenv
 REMINDER_API_KEY=
@@ -26,7 +26,7 @@ python -m pytest -q
 The live evaluation calls the configured model once per case and may consume provider quota:
 
 ```powershell
-python Part-2A\.harness\run_evaluation.py
+python Part-1B\.harness\run_evaluation.py
 ```
 
 The harness writes the model name, aggregate score, individual outcomes, and any model-service error to `evidence/final-generation/eval-results.json`. It never writes the API token. A service error is not treated as an evaluation PASS or FAIL.
@@ -39,7 +39,7 @@ If Gemini returns HTTP 429 with a quota-exceeded message, generation is blocked 
 From the repository root, start the local server in a terminal:
 
 ```powershell
-Set-Location .\Part-2A
+Set-Location .\Part-1B
 python -m src.app_server
 ```
 

@@ -12,7 +12,7 @@ if PACKAGE_NAME not in sys.modules:
         submodule_search_locations=[str(SOURCE_ROOT)],
     )
     if package_spec is None or package_spec.loader is None:
-        raise ImportError(f"Unable to load Part-2A source package from {SOURCE_ROOT}")
+        raise ImportError(f"Unable to load Part-1B source package from {SOURCE_ROOT}")
     package = importlib.util.module_from_spec(package_spec)
     sys.modules[PACKAGE_NAME] = package
     package_spec.loader.exec_module(package)

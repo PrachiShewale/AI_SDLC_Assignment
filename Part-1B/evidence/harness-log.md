@@ -15,12 +15,12 @@
     Used .env file to do the same and added it to .gitignore to avoid revealing the API key
     Increased the wait time till the model responds
 - Re-validation performed:
-    Run python Part-2A\.harness\run_evaluation.py 
+    Run python Part-1B\.harness\run_evaluation.py 
     checked the test cases passed
     Also, performed API calls through postman with different scenerios and her it successfully worked 
 
 ## Final evaluation
-- Evaluation command: python Part-2A\.harness\run_evaluation.py
+- Evaluation command: python Part-1B\.harness\run_evaluation.py
 - Run timestamp: 2026-11-21T19:54:26.250861+00:00
 - Model: gemini-flash-latest
 - Cases passed / total: 19/19
